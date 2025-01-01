@@ -1,25 +1,27 @@
 #!/bin/bash
 
-for foto in *.{jp*g,JP*G,PNG,HEIC}
-do
-    data=$(exiftool -DateTimeOriginal -d "%Y%m%d%H%M" $foto | awk -F ': ' '{print $2}' )
+# Desactiva la distinció entre majúscules i minúscules al 'for'.
+# Això no aplica a l'if, on cal transformar cada nom de fitxer a minúscules
+shopt -s nocaseglob
 
-    if [ -n "$data" ]; then
-        touch -t "$data" "$foto"
-        echo "Data de creació modificada per a $foto: $data"
+atributExifFotos="DateTimeOriginal"
+atributExifVideos="CreationDate"
+
+for fitxer in *.{jp*g,png,heic,mov,mp4}
+do
+    nomMinuscules=$(echo "$fitxer" | tr '[:upper:]' '[:lower:]')
+    if [[ $nomMinuscules == *.mov || $nomMinuscules == *.mp4 ]]; then
+        atributExif=$atributExifVideos
     else
-        echo "No s'ha trobat la data EXIF per a: $foto"
+        atributExif=$atributExifFotos
     fi
-done
 
-for video in *.{mov,MOV,mp4,MP4}
-do
-    data=$(exiftool -CreationDate -d "%Y%m%d%H%M" $video | awk -F ': ' '{print $2}')
+    data=$(exiftool -$atributExif -d "%Y%m%d%H%M" "$fitxer" | awk -F ': ' '{print $2}')
 
     if [ -n "$data" ]; then
-        touch -t "$data" "$video"
-        echo "Data de creació modificada per a $video: $data"
+        touch -t "$data" "$fitxer"
+        echo "Data de creació modificada per a $fitxer: $data"
     else
-        echo "No s'ha trobat la data EXIF per a: $video"
+        echo "No s'ha trobat la data EXIF per a: $fitxer"
     fi
 done
